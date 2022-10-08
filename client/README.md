@@ -1,2 +1,0 @@
-# SCIRP
-React JS App

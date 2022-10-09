@@ -1,42 +1,72 @@
-import mongoose, { mongo } from "mongoose";
-const { Schema} = mongoose;
-
+import mongoose from 'mongoose'
+import crypto from 'crypto'
 const UserSchema = new mongoose.Schema({
-    firstname: {
-      type: String,
-      required: true,
-    },
-    lastname: {
-      type:String,
-      require: true,
-    },
-    username: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    img: {
-      type: String,
-    },
-    phone: {
-      type: String,
-      required: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    isAdmin: {
-      type: Boolean,
-      default: false,
-    },
+  username: {
+    type: String,
+    trim: true,
+    required: 'Name is required'
   },
-  { timestamps: true }
-);
+  email: {
+    type: String,
+    trim: true,
+    unique: 'Email already exists',
+    match: [/.+\@.+\..+/, 'Please fill a valid email address'],
+    required: 'Email is required'
+  },
+  hashed_password: {
+    type: String,
+    required: "Password is required"
+  },
+  salt: String,
+  updated: Date,
+  created: {
+    type: Date,
+    default: Date.now
+  },
+  educator: {
+    type: Boolean,
+    default: false
+  },
+})
 
-export default mongoose.model("User", UserSchema);
+UserSchema
+  .virtual('password')
+  .set(function(password) {
+    this._password = password
+    this.salt = this.makeSalt()
+    this.hashed_password = this.encryptPassword(password)
+  })
+  .get(function() {
+    return this._password
+  })
+
+UserSchema.path('hashed_password').validate(function(v) {
+  if (this._password && this._password.length < 6) {
+    this.invalidate('password', 'Password must be at least 6 characters.')
+  }
+  if (this.isNew && !this._password) {
+    this.invalidate('password', 'Password is required')
+  }
+}, null)
+
+UserSchema.methods = {
+  authenticate: function(plainText) {
+    return this.encryptPassword(plainText) === this.hashed_password
+  },
+  encryptPassword: function(password) {
+    if (!password) return ''
+    try {
+      return crypto
+        .createHmac('sha1', this.salt)
+        .update(password)
+        .digest('hex')
+    } catch (err) {
+      return ''
+    }
+  },
+  makeSalt: function() {
+    return Math.round((new Date().valueOf() * Math.random())) + ''
+  }
+}
+
+export default mongoose.model('User', UserSchema)

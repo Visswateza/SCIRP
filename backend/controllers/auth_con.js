@@ -1,49 +1,76 @@
-import User from "../models/user_model.js";
-import bcrypt from "bcryptjs";
-import { createError } from "../utils/error.js";
-import jwt from "jsonwebtoken";
+import User from '../models/user_model.js'
+import jwt from 'jsonwebtoken'
+// import pkg from 'express-jwt'
+import config from '../config/config.js'
 
-export const register = async (req, res, next) => {
+
+const signin = async (req, res) => {
   try {
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(req.body.password, salt);
-
-    const newUser = new User({
-      ...req.body,
-      password: hash,
-    });
-
-    await newUser.save();
-    res.status(200).send("User has been created.");
-  } catch (err) {
-    next(err);
-  }
-};
-export const login = async (req, res, next) => {
-  try {
-    const user = await User.findOne({ username: req.body.username });
-    if (!user) return next(createError(404, "User not found!"));
-
-    const isPasswordCorrect = await bcrypt.compare(
-      req.body.password,
-      user.password
-    );
-    if (!isPasswordCorrect)
-      return next(createError(400, "Wrong password or username!"));
-
-    const token = jwt.sign(
-      { id: user._id, isAdmin: user.isAdmin },
-      process.env.JWT
-    );
-
-    const { password, isAdmin, ...otherDetails } = user._doc;
-    res
-      .cookie("access_token", token, {
-        httpOnly: true,
+    let user = await User.findOne({
+      "email": req.body.email
+    })
+    if (!user)
+      return res.status('401').json({
+        error: "User not found"
       })
-      .status(200)
-      .json({ details: { ...otherDetails }, isAdmin });
+
+    if (!user.authenticate(req.body.password)) {
+      return res.status('401').send({
+        error: "Email and password don't match."
+      })
+    }
+
+    const token = jwt.sign({
+      _id: user._id
+    }, config.jwtSecret)
+
+    res.cookie("t", token, {
+      expire: new Date() + 9999
+    })
+
+    return res.json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        educator: user.educator
+      }
+    })
+
   } catch (err) {
-    next(err);
+
+    return res.status('401').json({
+      error: "Could not sign in"
+    })
+
   }
-};
+}
+
+const signout = (req, res) => {
+  res.clearCookie("t")
+  return res.status('200').json({
+    message: "signed out"
+  })
+}
+
+// const requireSignin = expressJwt({
+//   secret: config.jwtSecret,
+//   userProperty: 'auth'
+// })
+
+const hasAuthorization = (req, res, next) => {
+  const authorized = req.profile && req.auth && req.profile._id == req.auth._id
+  if (!(authorized)) {
+    return res.status('403').json({
+      error: "User is not authorized"
+    })
+  }
+  next()
+}
+
+export default {
+  signin,
+  signout,
+  hasAuthorization
+}

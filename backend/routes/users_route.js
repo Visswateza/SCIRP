@@ -1,25 +1,17 @@
-import express from "express";
-import {
-  updateUser,
-  deleteUser,
-  getUser,
-  getUsers,
-} from "../controllers/user_con.js";
-import { verifyAdmin, verifyToken, verifyUser } from "../utils/verifyToken.js";
+import express from 'express'
+import userCtrl from '../controllers/user_con.js'
+import authCtrl from '../controllers/auth_con.js'
 
-const router = express.Router();
+const router = express.Router()
 
+router.get("/list", userCtrl.list)
+router.post("/register", userCtrl.create)
 
-//UPDATE
-router.put("/:id", verifyUser, updateUser);
+router.route('/api/users/:userId')
+  .get(authCtrl.signin, userCtrl.read)
+  .put(authCtrl.signin, authCtrl.hasAuthorization, userCtrl.update)
+  .delete(authCtrl.signin, authCtrl.hasAuthorization, userCtrl.remove)
 
-//DELETE
-router.delete("/:id", verifyUser, deleteUser);
+router.param('userId', userCtrl.userByID)
 
-//GET
-router.get("/:id", verifyUser, getUser);
-
-//GET ALL
-router.get("/", verifyAdmin, getUsers);
-
-export default router;
+export default router

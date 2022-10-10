@@ -1,3 +1,0 @@
-# SCIRP
-
-React App

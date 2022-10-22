@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "react-admin": "^4.4.4"
+  },
+  "name": "scirp",
+  "description": "React JS App",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PranithChowdary/SCIRP.git"
+  },
+  "author": "Pranith Chowdary.K",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PranithChowdary/SCIRP/issues"
+  },
+  "homepage": "https://github.com/PranithChowdary/SCIRP#readme"
+}

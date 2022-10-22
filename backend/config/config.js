@@ -1,14 +1,9 @@
-import dotenv from "dotenv";
+module.exports = {
+  ENV: process.env.NODE_ENV || 'development',
+  PORT: process.env.PORT || 3000,
+  URL: process.env.BASE_URL || 'http://localhost:3000',
+  MONGODB_URI: process.env.MONGODB_URI || 'mongodb://prani:prani@autho.0mjhsba.mongodb.net/?retryWrites=true&w=majority',
+  JWT_SECRET: process.env.JWT_SECRET || 'secret1'
+};
 
-const config = {
-    env: process.env.NODE_ENV || 'development',
-    port: process.env.PORT || 3000,
-    jwtSecret: process.env.JWT_SECRET || "YOUR_secret_key",
-    mongoUri: process.env.MONGODB_URI ||
-      process.env.MONGO_HOST ||
-      'mongodb://' + (process.env.IP || 'localhost') + ':' +
-      (process.env.MONGO_PORT || '27017') +
-      '/mernproject'
-  }
-  dotenv.config;
-  export default config
+  

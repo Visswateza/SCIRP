@@ -1,51 +1,30 @@
-import express from "express";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import authRoute from "./routes/auth_route.js";
-import usersRoute from "./routes/users_route.js";
-import hotelsRoute from "./routes/event_route.js";
-import roomsRoute from "./routes/rooms_route.js";
-import cookieParser from "cookie-parser";
-import cors from "cors";
+const restify = require('restify');
+const mongoose = require('mongoose');
+const config = require('./config');
+const rjwt = require('restify-jwt-community');
 
-const app = express();
-dotenv.config();
+const server = restify.createServer();
 
-const connect = async () => {
-  try {
-    await mongoose.connect(process.env.DB_URL);
-    console.log("Connected to mongoDB.");
-  } catch (error) {
-    throw error;
-  }
-};
+// Middleware
+server.use(restify.plugins.bodyParser());
 
-mongoose.connection.on("disconnected", () => {
-  console.log("mongoDB disconnected!");
+// Protect Routes
+// server.use(rjwt({ secret: config.JWT_SECRET }).unless({ path: ['/auth'] }));
+
+server.listen(config.PORT, () => {
+  mongoose.set('useFindAndModify', false);
+  mongoose.connect(
+    config.MONGODB_URI,
+    { useNewUrlParser: true }
+  );
 });
 
-//middlewares
-app.use(cors())
-app.use(cookieParser())
-app.use(express.json());
+const db = mongoose.connection;
 
-app.use("/api/auth", authRoute);
-app.use("/api/users", usersRoute);
-app.use("/api/hotels", hotelsRoute);
-app.use("/api/rooms", roomsRoute);
+db.on('error', err => console.log(err));
 
-app.use((err, req, res, next) => {
-  const errorStatus = err.status || 500;
-  const errorMessage = err.message || "Something went wrong!";
-  return res.status(errorStatus).json({
-    success: false,
-    status: errorStatus,
-    message: errorMessage,
-    stack: err.stack,
-  });
-});
-
-app.listen(8800, () => {
-  connect();
-  console.log("Connected to backend.");
+db.once('open', () => {
+  require('./routes/customers')(server);
+  require('./routes/users')(server);
+  console.log(`Server started on port ${config.PORT}`);
 });

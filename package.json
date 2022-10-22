@@ -1,14 +1,19 @@
 {
   "dependencies": {
+    "concurrently": "^7.4.0",
+    "express": "^4.18.2",
     "react-admin": "^4.4.4"
   },
   "name": "scirp",
   "description": "React JS App",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "npm start --prefix backend",
+    "client": "npm start --prefix client",
+    "admin": "npm start --prefix admin",
+    "dev": "concurrently \"npm run server\" \"npm run client\" \"npm run admin\""
   },
   "repository": {
     "type": "git",
